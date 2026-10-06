@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flip Clock</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      display: table;
+      width: 100%;
+      height: 100vh;
+    }
+
+    .page {
+      display: table-cell;
+      text-align: center;
+      vertical-align: middle;
+      padding: 16px;
+    }
+
+    .clock {
+      position: relative;
+      display: inline-block;
+      max-width: 100%;
+      padding: 14px;
+      background: #000;
+      white-space: nowrap;
+    }
+
+    .digits {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .digit {
+      position: relative;
+      display: inline-block;
+      width: 82px;
+      margin: 0 4px;
+      overflow: hidden;
+      border-radius: 5px;
+      background: #171717;
+      color: #fff;
+      font-size: 68px;
+      font-weight: bold;
+      line-height: 1.35;
+      text-align: center;
+      vertical-align: middle;
+      box-shadow: 0 4px 0 #333;
+    }
+
+    .digit:after {
+      position: absolute;
+      top: 50%;
+      right: 0;
+      left: 0;
+      height: 1px;
+      background: #000;
+      content: "";
+    }
+
+    .separator {
+      display: inline-block;
+      margin: 0 2px;
+      color: #fff;
+      font-size: 60px;
+      font-weight: bold;
+      line-height: 1;
+      vertical-align: middle;
+      -webkit-animation: blink 1s steps(2, start) infinite;
+      animation: blink 1s steps(2, start) infinite;
+    }
+
+    @-webkit-keyframes blink {
+      to { opacity: 0.45; }
+    }
+
+    @keyframes blink {
+      to { opacity: 0.45; }
+    }
+
+    .flip {
+      -webkit-animation: flip 0.45s ease-in-out;
+      animation: flip 0.45s ease-in-out;
+    }
+
+    @-webkit-keyframes flip {
+      0% { -webkit-transform: rotateX(0); }
+      50% { -webkit-transform: rotateX(-90deg); }
+      100% { -webkit-transform: rotateX(0); }
+    }
+
+    @keyframes flip {
+      0% { transform: rotateX(0); }
+      50% { transform: rotateX(-90deg); }
+      100% { transform: rotateX(0); }
+    }
+
+    @media screen and (max-width: 420px) {
+      .clock {
+        padding: 8px 2px;
+      }
+
+      .digit {
+        width: 58px;
+        margin: 0 2px;
+        font-size: 48px;
+      }
+
+      .separator {
+        font-size: 44px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="clock" id="clock" role="timer" aria-label="Current time">
+      <span class="digits">
+        <span class="digit" id="hour-tens">0</span><span class="digit" id="hour-ones">0</span>
+      </span>
+      <span class="separator" aria-hidden="true">:</span>
+      <span class="digits">
+        <span class="digit" id="minute-tens">0</span><span class="digit" id="minute-ones">0</span>
+      </span>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var digitIds = ["hour-tens", "hour-ones", "minute-tens", "minute-ones"];
+      var clock = document.getElementById("clock");
+      var shiftPositions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+      var shiftIndex = 0;
+      var previousTime = "";
+
+      function updateClock() {
+        var now = new Date();
+        var hours = now.getHours();
+        var minutes = now.getMinutes();
+        var time = (hours < 10 ? "0" : "") + hours + (minutes < 10 ? "0" : "") + minutes;
+        var i;
+        var digit;
+
+        if (time === previousTime) {
+          return;
+        }
+
+        for (i = 0; i < digitIds.length; i++) {
+          digit = document.getElementById(digitIds[i]);
+          if (digit.innerHTML !== time.charAt(i)) {
+            digit.innerHTML = time.charAt(i);
+            digit.className = "digit flip";
+            window.setTimeout(function (element) {
+              return function () {
+                element.className = "digit";
+              };
+            }(digit), 500);
+          }
+        }
+
+        previousTime = time;
+      }
+
+      function shiftClock() {
+        var position = shiftPositions[shiftIndex];
+        clock.style.left = position[0] + "px";
+        clock.style.top = position[1] + "px";
+        shiftIndex = (shiftIndex + 1) % shiftPositions.length;
+      }
+
+      function blankScreenBriefly() {
+        clock.style.visibility = "hidden";
+        window.setTimeout(function () {
+          clock.style.visibility = "visible";
+        }, 5000);
+      }
+
+      // Read the device's local time immediately, then keep it refreshed.
+      updateClock();
+      window.setInterval(updateClock, 1000);
+      // Small periodic movement helps avoid keeping the same pixels lit.
+      window.setInterval(shiftClock, 30000);
+      // Briefly hide the clock for five seconds every five minutes.
+      window.setInterval(blankScreenBriefly, 300000);
+    }());
+  </script>
+</body>
+</html>
