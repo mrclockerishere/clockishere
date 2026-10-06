@@ -41,6 +41,71 @@
       white-space: nowrap;
     }
 
+    .clock-stack {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .date {
+      margin-top: 10px;
+      color: #888;
+      font-size: 15px;
+      letter-spacing: 1px;
+    }
+
+    .period {
+      display: inline-block;
+      width: 34px;
+      margin-left: 8px;
+      color: #888;
+      font-size: 13px;
+      font-weight: normal;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .time-format {
+      position: fixed;
+      right: 20px;
+      bottom: 18px;
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      border: 1px solid #292929;
+      border-radius: 5px;
+      background: #0b0b0b;
+      opacity: 0.7;
+      transition: opacity 160ms ease;
+    }
+
+    .time-format:hover,
+    .time-format:focus-within {
+      opacity: 1;
+    }
+
+    .time-format button {
+      min-width: 38px;
+      padding: 5px 7px;
+      border: 0;
+      border-radius: 3px;
+      background: transparent;
+      color: #777;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .time-format button[aria-pressed="true"] {
+      background: #252525;
+      color: #eee;
+    }
+
+    .time-format button:focus-visible {
+      outline: 1px solid #aaa;
+      outline-offset: 1px;
+    }
+
     .digits {
       display: inline-block;
       vertical-align: middle;
@@ -124,39 +189,70 @@
       .separator {
         font-size: 44px;
       }
+
+      .date {
+        font-size: 13px;
+      }
+
+      .time-format {
+        right: 12px;
+        bottom: 12px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <div class="clock" id="clock" role="timer" aria-label="Current time">
-      <span class="digits">
-        <span class="digit" id="hour-tens">0</span><span class="digit" id="hour-ones">0</span>
-      </span>
-      <span class="separator" aria-hidden="true">:</span>
-      <span class="digits">
-        <span class="digit" id="minute-tens">0</span><span class="digit" id="minute-ones">0</span>
-      </span>
+    <div class="clock-stack">
+      <div class="clock" id="clock" role="timer" aria-label="Current time">
+        <span class="digits">
+          <span class="digit" id="hour-tens">0</span><span class="digit" id="hour-ones">0</span>
+        </span>
+        <span class="separator" aria-hidden="true">:</span>
+        <span class="digits">
+          <span class="digit" id="minute-tens">0</span><span class="digit" id="minute-ones">0</span>
+        </span><span class="period" id="period" aria-hidden="true"></span>
+      </div>
+      <div class="date" id="date" aria-live="off"></div>
     </div>
+  </div>
+
+  <div class="time-format" role="group" aria-label="Time format">
+    <button type="button" id="format-12" aria-pressed="false">12h</button>
+    <button type="button" id="format-24" aria-pressed="true">24h</button>
   </div>
 
   <script>
     (function () {
       var digitIds = ["hour-tens", "hour-ones", "minute-tens", "minute-ones"];
       var clock = document.getElementById("clock");
+      var dateDisplay = document.getElementById("date");
+      var periodDisplay = document.getElementById("period");
+      var format12Button = document.getElementById("format-12");
+      var format24Button = document.getElementById("format-24");
       var shiftPositions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
       var shiftIndex = 0;
       var previousTime = "";
+      var use12Hour = false;
 
       function updateClock() {
         var now = new Date();
         var hours = now.getHours();
         var minutes = now.getMinutes();
-        var time = (hours < 10 ? "0" : "") + hours + (minutes < 10 ? "0" : "") + minutes;
+        var displayHours = hours;
+        var time;
         var i;
         var digit;
 
+        if (use12Hour) {
+          displayHours = hours % 12 || 12;
+        }
+
+        time = (displayHours < 10 ? "0" : "") + displayHours + (minutes < 10 ? "0" : "") + minutes;
+
         if (time === previousTime) {
+          dateDisplay.textContent = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+          periodDisplay.textContent = use12Hour ? (hours < 12 ? "AM" : "PM") : "";
           return;
         }
 
@@ -174,6 +270,17 @@
         }
 
         previousTime = time;
+        dateDisplay.textContent = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+        periodDisplay.textContent = use12Hour ? (hours < 12 ? "AM" : "PM") : "";
+        clock.setAttribute("aria-label", "Current time, " + (use12Hour ? (displayHours + ":" + (minutes < 10 ? "0" : "") + minutes + " " + periodDisplay.textContent) : time.slice(0, 2) + ":" + time.slice(2)));
+      }
+
+      function setTimeFormat(useTwelveHour) {
+        use12Hour = useTwelveHour;
+        previousTime = "";
+        format12Button.setAttribute("aria-pressed", use12Hour ? "true" : "false");
+        format24Button.setAttribute("aria-pressed", use12Hour ? "false" : "true");
+        updateClock();
       }
 
       function shiftClock() {
@@ -191,6 +298,8 @@
       }
 
       // Read the device's local time immediately, then keep it refreshed.
+      format12Button.addEventListener("click", function () { setTimeFormat(true); });
+      format24Button.addEventListener("click", function () { setTimeFormat(false); });
       updateClock();
       window.setInterval(updateClock, 1000);
       // Small periodic movement helps avoid keeping the same pixels lit.
@@ -201,3 +310,4 @@
   </script>
 </body>
 </html>
+
