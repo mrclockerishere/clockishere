@@ -39,6 +39,10 @@
       padding: 14px;
       background: #000;
       white-space: nowrap;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
     }
 
     .clock-stack {
@@ -77,6 +81,151 @@
       background: #0b0b0b;
       opacity: 0.7;
       transition: opacity 160ms ease;
+    }
+
+    .timer-tools {
+      position: fixed;
+      top: 18px;
+      right: 20px;
+      z-index: 1;
+      width: 224px;
+      padding: 8px;
+      border: 1px solid #292929;
+      border-radius: 5px;
+      background: #0b0b0b;
+      opacity: 0.8;
+      transition: opacity 160ms ease;
+    }
+
+    .timer-tools:hover,
+    .timer-tools:focus-within {
+      opacity: 1;
+    }
+
+    .timer-toggle,
+    .timer-panel button {
+      padding: 6px 8px;
+      border: 1px solid #333;
+      border-radius: 3px;
+      background: #171717;
+      color: #ddd;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .timer-toggle {
+      width: 100%;
+    }
+
+    .timer-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 2;
+      overflow: auto;
+      padding: 20px;
+      background: #000;
+      text-align: center;
+    }
+
+    .timer-back {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      width: auto;
+    }
+
+    .timer-content {
+      width: 224px;
+      max-width: 100%;
+      margin: 15vh auto 0;
+      text-align: left;
+    }
+
+    .timer-modes,
+    .timer-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .timer-modes button,
+    .timer-controls button {
+      flex: 1;
+    }
+
+    .timer-panel button[aria-pressed="true"] {
+      background: #333;
+      color: #fff;
+    }
+
+    .timer-inputs {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin: 10px 0;
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    .timer-inputs label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .timer-inputs input {
+      width: 48px;
+      padding: 5px 3px;
+      border: 1px solid #333;
+      border-radius: 3px;
+      background: #171717;
+      color: #fff;
+      font: inherit;
+      text-align: center;
+    }
+
+    .timer-display {
+      margin: 24px 0 4px;
+      color: #fff;
+      font-size: 36px;
+      font-weight: bold;
+      text-align: center;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .timer-laps {
+      max-height: 180px;
+      margin: 12px 0 0;
+      padding: 0;
+      overflow: auto;
+      color: #bbb;
+      font-size: 13px;
+      list-style: none;
+    }
+
+    .timer-laps li {
+      padding: 6px 2px;
+      border-bottom: 1px solid #222;
+    }
+
+    .timer-status {
+      min-height: 16px;
+      margin-bottom: 8px;
+      color: #999;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .timer-tools button:focus,
+    .timer-tools input:focus {
+      outline: 1px solid #aaa;
+      outline-offset: 1px;
     }
 
     .time-format:hover,
@@ -198,6 +347,20 @@
         right: 12px;
         bottom: 12px;
       }
+
+      .timer-tools {
+        top: 12px;
+        right: 12px;
+      }
+
+      .timer-back {
+        top: 12px;
+        right: 12px;
+      }
+
+      .timer-content {
+        margin-top: 18vh;
+      }
     }
   </style>
 </head>
@@ -218,8 +381,38 @@
   </div>
 
   <div class="time-format" role="group" aria-label="Time format">
-    <button type="button" id="format-12" aria-pressed="false">12h</button>
-    <button type="button" id="format-24" aria-pressed="true">24h</button>
+    <button type="button" id="format-12" aria-pressed="true">12h</button>
+    <button type="button" id="format-24" aria-pressed="false">24h</button>
+  </div>
+
+  <div class="timer-tools">
+    <button type="button" class="timer-toggle" id="timer-toggle" aria-expanded="false" aria-controls="timer-panel">Timer</button>
+  </div>
+
+  <div class="timer-panel" id="timer-panel" style="display: none;">
+    <button type="button" class="timer-back" id="timer-back">Back to clock</button>
+    <div class="timer-content">
+      <div class="timer-modes" role="group" aria-label="Timer mode">
+        <button type="button" id="countdown-mode" aria-pressed="true">Countdown</button>
+        <button type="button" id="stopwatch-mode" aria-pressed="false">Stopwatch</button>
+      </div>
+      <div class="timer-inputs" id="timer-inputs">
+        <label for="timer-minutes">Min
+          <input type="text" id="timer-minutes" value="1" maxlength="5" inputmode="numeric">
+        </label>
+        <label for="timer-seconds">Sec
+          <input type="text" id="timer-seconds" value="0" maxlength="2" inputmode="numeric">
+        </label>
+      </div>
+      <div class="timer-display" id="timer-display" role="timer" aria-live="off">01:00.000</div>
+      <div class="timer-status" id="timer-status" aria-live="polite">Ready</div>
+      <div class="timer-controls">
+        <button type="button" id="timer-start">Start</button>
+        <button type="button" id="timer-lap" style="display: none;" disabled>Lap</button>
+        <button type="button" id="timer-reset">Reset</button>
+      </div>
+      <ol class="timer-laps" id="timer-laps" aria-label="Stopwatch laps"></ol>
+    </div>
   </div>
 
   <script>
@@ -230,10 +423,231 @@
       var periodDisplay = document.getElementById("period");
       var format12Button = document.getElementById("format-12");
       var format24Button = document.getElementById("format-24");
+      var timerToggle = document.getElementById("timer-toggle");
+      var timerBack = document.getElementById("timer-back");
+      var timerPanel = document.getElementById("timer-panel");
+      var countdownModeButton = document.getElementById("countdown-mode");
+      var stopwatchModeButton = document.getElementById("stopwatch-mode");
+      var timerInputs = document.getElementById("timer-inputs");
+      var timerMinutes = document.getElementById("timer-minutes");
+      var timerSeconds = document.getElementById("timer-seconds");
+      var timerDisplay = document.getElementById("timer-display");
+      var timerStatus = document.getElementById("timer-status");
+      var timerStartButton = document.getElementById("timer-start");
+      var timerLapButton = document.getElementById("timer-lap");
+      var timerResetButton = document.getElementById("timer-reset");
+      var timerLaps = document.getElementById("timer-laps");
       var shiftPositions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
       var shiftIndex = 0;
       var previousTime = "";
-      var use12Hour = false;
+      var use12Hour = true;
+      var timerMode = "countdown";
+      var timerRunning = false;
+      var timerInterval = null;
+      var countdownRemaining = 60000;
+      var countdownDeadline = 0;
+      var stopwatchElapsed = 0;
+      var stopwatchStartedAt = 0;
+      var lapTimes = [];
+      var lastLapElapsed = 0;
+
+      function padNumber(number) {
+        return number < 10 ? "0" + number : String(number);
+      }
+
+      function formatDuration(milliseconds) {
+        var totalSeconds = Math.floor(milliseconds / 1000);
+        var hours = Math.floor(totalSeconds / 3600);
+        var minutes = Math.floor((totalSeconds % 3600) / 60);
+        var seconds = totalSeconds % 60;
+        var millis = milliseconds % 1000;
+        var millisText = millis < 10 ? "00" + millis : (millis < 100 ? "0" + millis : String(millis));
+        if (hours > 0) {
+          return padNumber(hours) + ":" + padNumber(minutes) + ":" + padNumber(seconds) + "." + millisText;
+        }
+        return padNumber(minutes) + ":" + padNumber(seconds) + "." + millisText;
+      }
+
+      function stopTimerInterval() {
+        if (timerInterval !== null) {
+          window.clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      }
+
+      function showTimerValue(milliseconds) {
+        timerDisplay.textContent = formatDuration(milliseconds);
+      }
+
+      function updateTimer() {
+        var now = new Date().getTime();
+
+        if (timerMode === "countdown") {
+          countdownRemaining = Math.max(0, countdownDeadline - now);
+          showTimerValue(countdownRemaining);
+          if (countdownRemaining === 0) {
+            timerRunning = false;
+            stopTimerInterval();
+            timerStartButton.textContent = "Start";
+            timerStatus.textContent = "Time is up";
+          }
+          return;
+        }
+
+        showTimerValue(stopwatchElapsed + (timerRunning ? now - stopwatchStartedAt : 0));
+      }
+
+      function clearLaps() {
+        lapTimes = [];
+        lastLapElapsed = 0;
+        timerLaps.innerHTML = "";
+        timerLapButton.disabled = false;
+      }
+
+      function addLap() {
+        var elapsed;
+        var lapDuration;
+        var lapItem;
+
+        if (!timerRunning || timerMode !== "stopwatch" || lapTimes.length >= 10) {
+          return;
+        }
+        elapsed = stopwatchElapsed + new Date().getTime() - stopwatchStartedAt;
+        lapDuration = elapsed - lastLapElapsed;
+        lastLapElapsed = elapsed;
+        lapTimes.push(elapsed);
+        lapItem = document.createElement("li");
+        lapItem.textContent = "Lap " + lapTimes.length + " — " + formatDuration(lapDuration) + " (total " + formatDuration(elapsed) + ")";
+        timerLaps.appendChild(lapItem);
+        if (lapTimes.length >= 10) {
+          timerLapButton.disabled = true;
+          timerStatus.textContent = "10 laps recorded";
+        }
+      }
+
+      function readCountdownDuration() {
+        var minutesText = timerMinutes.value.replace(/^\s+|\s+$/g, "");
+        var secondsText = timerSeconds.value.replace(/^\s+|\s+$/g, "");
+        var minutes;
+        var seconds;
+
+        if (!/^\d+$/.test(minutesText) || !/^\d+$/.test(secondsText)) {
+          return null;
+        }
+        minutes = parseInt(minutesText, 10);
+        seconds = parseInt(secondsText, 10);
+        if (!isFinite(minutes) || !isFinite(seconds) || seconds > 59) {
+          return null;
+        }
+        return (minutes * 60 + seconds) * 1000;
+      }
+
+      function setTimerMode(mode) {
+        if (timerRunning) {
+          timerRunning = false;
+          stopTimerInterval();
+        }
+        timerMode = mode;
+        timerStartButton.textContent = "Start";
+        timerStatus.textContent = "Ready";
+        timerLapButton.style.display = mode === "stopwatch" ? "block" : "none";
+        clearLaps();
+        countdownModeButton.setAttribute("aria-pressed", mode === "countdown" ? "true" : "false");
+        stopwatchModeButton.setAttribute("aria-pressed", mode === "stopwatch" ? "true" : "false");
+        timerInputs.style.display = mode === "countdown" ? "flex" : "none";
+        if (mode === "countdown") {
+          countdownRemaining = readCountdownDuration();
+          if (countdownRemaining === null) {
+            countdownRemaining = 0;
+          }
+          showTimerValue(countdownRemaining);
+        } else {
+          stopwatchElapsed = 0;
+          showTimerValue(0);
+        }
+      }
+
+      function toggleTimer() {
+        if (timerRunning) {
+          if (timerMode === "countdown") {
+            countdownRemaining = Math.max(0, countdownDeadline - new Date().getTime());
+          } else {
+            stopwatchElapsed += new Date().getTime() - stopwatchStartedAt;
+          }
+          timerRunning = false;
+          stopTimerInterval();
+          timerStartButton.textContent = "Start";
+          timerLapButton.disabled = true;
+          timerStatus.textContent = "Paused";
+          updateTimer();
+          return;
+        }
+
+        if (timerMode === "countdown") {
+          if (countdownRemaining <= 0) {
+            countdownRemaining = readCountdownDuration();
+          }
+          if (countdownRemaining === null || countdownRemaining <= 0) {
+            timerStatus.textContent = "Enter a valid time greater than zero";
+            return;
+          }
+          countdownDeadline = new Date().getTime() + countdownRemaining;
+          timerStatus.textContent = "Counting down";
+        } else {
+          stopwatchStartedAt = new Date().getTime();
+          timerStatus.textContent = "Stopwatch running";
+        }
+
+        timerRunning = true;
+        timerStartButton.textContent = "Pause";
+        timerLapButton.disabled = timerMode !== "stopwatch";
+        stopTimerInterval();
+        timerInterval = window.setInterval(updateTimer, 10);
+        updateTimer();
+      }
+
+      function resetTimer() {
+        timerRunning = false;
+        stopTimerInterval();
+        timerStartButton.textContent = "Start";
+        timerStatus.textContent = "Ready";
+        clearLaps();
+        if (timerMode === "countdown") {
+          countdownRemaining = readCountdownDuration();
+          if (countdownRemaining === null) {
+            timerStatus.textContent = "Enter minutes and seconds";
+            countdownRemaining = 0;
+          }
+          showTimerValue(countdownRemaining);
+        } else {
+          stopwatchElapsed = 0;
+          showTimerValue(0);
+        }
+        timerLapButton.disabled = true;
+      }
+
+      function returnToClock() {
+        timerRunning = false;
+        stopTimerInterval();
+        timerPanel.style.display = "none";
+        timerToggle.setAttribute("aria-expanded", "false");
+        timerMode = "countdown";
+        timerMinutes.value = "1";
+        timerSeconds.value = "0";
+        countdownRemaining = 60000;
+        countdownDeadline = 0;
+        stopwatchElapsed = 0;
+        stopwatchStartedAt = 0;
+        timerStartButton.textContent = "Start";
+        timerStatus.textContent = "Ready";
+        timerLapButton.style.display = "none";
+        timerLapButton.disabled = true;
+        countdownModeButton.setAttribute("aria-pressed", "true");
+        stopwatchModeButton.setAttribute("aria-pressed", "false");
+        timerInputs.style.display = "flex";
+        clearLaps();
+        showTimerValue(countdownRemaining);
+      }
 
       function updateClock() {
         var now = new Date();
@@ -300,6 +714,20 @@
       // Read the device's local time immediately, then keep it refreshed.
       format12Button.addEventListener("click", function () { setTimeFormat(true); });
       format24Button.addEventListener("click", function () { setTimeFormat(false); });
+      timerToggle.addEventListener("click", function () {
+        timerPanel.style.display = "block";
+        timerToggle.setAttribute("aria-expanded", "true");
+      });
+      timerBack.addEventListener("click", function () {
+        returnToClock();
+      });
+      countdownModeButton.addEventListener("click", function () { setTimerMode("countdown"); });
+      stopwatchModeButton.addEventListener("click", function () { setTimerMode("stopwatch"); });
+      timerStartButton.addEventListener("click", toggleTimer);
+      timerLapButton.addEventListener("click", addLap);
+      timerResetButton.addEventListener("click", resetTimer);
+      timerMinutes.addEventListener("input", resetTimer);
+      timerSeconds.addEventListener("input", resetTimer);
       updateClock();
       window.setInterval(updateClock, 1000);
       // Small periodic movement helps avoid keeping the same pixels lit.
@@ -310,4 +738,3 @@
   </script>
 </body>
 </html>
-
